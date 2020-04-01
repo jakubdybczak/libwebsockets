@@ -464,10 +464,6 @@ libwebsockets_get_peer_addresses(int fd, char *name, int name_len,
 	len = sizeof sin;
 	if (getpeername(fd, (struct sockaddr *) &sin, &len) < 0) {
 		//perror("getpeername");
-        if (errno < sys_nerr)
-        {
-            lws_log(LWS_LOG_ERROR, "getpeername: %s", sys_errlist[errno]);
-        }
 		return;
 	}
 
@@ -475,10 +471,6 @@ libwebsockets_get_peer_addresses(int fd, char *name, int name_len,
 								       AF_INET);
 	if (host == NULL) {
 		//perror("gethostbyaddr");
-        if (errno < sys_nerr)
-        {
-            lws_log(LWS_LOG_ERROR, "gethostbyaddr: %s", sys_errlist[errno]);
-        }
 		return;
 	}
 
@@ -2041,13 +2033,6 @@ read_pending:
 					   recv(pollfd->fd, buf, sizeof buf, 0);
 
 		if (eff_buf.token_len < 0) {
-
-			if (wsi->ssl) {
-				n = SSL_get_error(wsi->ssl, eff_buf.token_len);
-				if (n == SSL_ERROR_WANT_READ)
-					return 0;
-			}
-
 			lws_log(LWS_LOG_INFO, "Socket read returned %d",
 							    eff_buf.token_len);
 			if (errno != EINTR)
@@ -2679,9 +2664,12 @@ libwebsocket_create_context(int port, const char *interf,
 						sizeof context->canonical_hostname - 1);
 			context->canonical_hostname[
 					sizeof context->canonical_hostname - 1] = '\0';
-		} else
+		} else {
 			strncpy(context->canonical_hostname, hostname,
 						sizeof context->canonical_hostname - 1);
+			context->canonical_hostname[
+					sizeof context->canonical_hostname - 1] = '\0';
+		}
 
 	//	fprintf(stderr, "context->canonical_hostname = %s\n",
 	//						context->canonical_hostname);
